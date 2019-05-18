@@ -1,0 +1,13 @@
+{
+  "name": "proseline-crypto",
+  "version": "0.0.0",
+  "description": "cryptographic helper functions",
+  "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
+  "repository": "proseline/proseline-crypto.js",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "fast-json-stable-stringify": "^2.0.0",
+    "nanoassert": "^2.0.0",
+    "sodium-universal": "^2.0.0"
+  }
+}
