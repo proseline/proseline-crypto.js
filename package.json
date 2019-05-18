@@ -1,5 +1,5 @@
 {
-  "name": "proseline-crypto",
+  "name": "@proseline/crypto",
   "version": "1.0.0-pre.2",
   "description": "cryptographic helper functions",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
