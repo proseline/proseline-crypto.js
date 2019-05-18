@@ -76,6 +76,8 @@ exports.randomNonce = function () {
 
 exports.nonceBytes = BOX_NONCE_BYTES
 
+var BOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
+
 exports.encrypt = function (plaintext, nonce, key) {
   assert(Buffer.isBuffer(plaintext))
   assert(plaintext.length > 0)
@@ -83,12 +85,12 @@ exports.encrypt = function (plaintext, nonce, key) {
   assert(nonce.length === BOX_NONCE_BYTES)
   assert(typeof key === 'string')
   assert(key.length > 0)
-  var ciphertext = Buffer.alloc(
-    plaintext.length + sodium.crypto_secretbox_MACBYTES
-  )
+  var ciphertext = Buffer.alloc(plaintext.length + BOX_MAC_BYTES)
   sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
   return ciphertext
 }
+
+exports.encryptionMACBytes = BOX_MAC_BYTES
 
 // Public-Key Cryptography
 // =======================
