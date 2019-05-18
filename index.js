@@ -83,8 +83,8 @@ exports.encrypt = function (plaintext, nonce, key) {
   assert(plaintext.length > 0)
   assert(Buffer.isBuffer(nonce))
   assert(nonce.length === BOX_NONCE_BYTES)
-  assert(typeof key === 'string')
-  assert(key.length > 0)
+  assert(Buffer.isBuffer(key))
+  assert(key.length === BOX_SECRET_KEY_BYTES)
   var ciphertext = Buffer.alloc(plaintext.length + BOX_MAC_BYTES)
   sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
   return ciphertext
