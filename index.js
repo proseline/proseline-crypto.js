@@ -56,13 +56,13 @@ exports.discoveryKeyLength = HASH_BYTES
 // Box Encryption
 // --------------
 
-var BOX_SECRET_KEY_BYTES = 32 // sodium.crypto_box_SECRETKEYBYTES
+var BOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
 exports.makeProjectReadKey = function () {
-  return randomBuffer(BOX_SECRET_KEY_BYTES)
+  return randomBuffer(BOX_KEY_BYTES)
 }
 
-exports.projectReadKeyBytes = BOX_SECRET_KEY_BYTES
+exports.projectReadKeyBytes = BOX_KEY_BYTES
 
 var BOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
 
@@ -82,7 +82,7 @@ exports.encrypt = function (plaintext, nonce, key) {
   assert(Buffer.isBuffer(nonce))
   assert(nonce.length === BOX_NONCE_BYTES)
   assert(Buffer.isBuffer(key))
-  assert(key.length === BOX_SECRET_KEY_BYTES)
+  assert(key.length === BOX_KEY_BYTES)
   var ciphertext = Buffer.alloc(plaintext.length + BOX_MAC_BYTES)
   sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
   return ciphertext
@@ -94,8 +94,8 @@ exports.decrypt = function (ciphertext, nonce, key) {
   assert(Buffer.isBuffer(nonce))
   assert(nonce.length === BOX_NONCE_BYTES)
   assert(Buffer.isBuffer(key))
-  assert(key.length === BOX_SECRET_KEY_BYTES)
-  var plaintext = Buffer.alloc(ciphertext.length + BOX_MAC_BYTES)
+  assert(key.length === BOX_KEY_BYTES)
+  var plaintext = Buffer.alloc(ciphertext.length - BOX_MAC_BYTES)
   var result = sodium.crypto_secretbox_open_easy(
     plaintext, ciphertext, nonce, key
   )
