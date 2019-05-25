@@ -76,6 +76,8 @@ exports.nonceBytes = BOX_NONCE_BYTES
 
 var BOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
 
+exports.encryptionMACBytes = BOX_MAC_BYTES
+
 exports.encrypt = function (plaintext, nonce, key) {
   assert(Buffer.isBuffer(plaintext))
   assert(plaintext.length > 0)
@@ -87,8 +89,6 @@ exports.encrypt = function (plaintext, nonce, key) {
   sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
   return ciphertext
 }
-
-exports.encryptionMACBytes = BOX_MAC_BYTES
 
 // Public-Key Cryptography
 // =======================
