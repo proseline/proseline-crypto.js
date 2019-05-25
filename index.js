@@ -90,6 +90,21 @@ exports.encrypt = function (plaintext, nonce, key) {
   return ciphertext
 }
 
+exports.decrypt = function (ciphertext, nonce, key) {
+  assert(Buffer.isBuffer(ciphertext))
+  assert(ciphertext.length > 0)
+  assert(Buffer.isBuffer(nonce))
+  assert(nonce.length === BOX_NONCE_BYTES)
+  assert(Buffer.isBuffer(key))
+  assert(key.length === BOX_SECRET_KEY_BYTES)
+  var plaintext = Buffer.alloc(ciphertext.length + BOX_MAC_BYTES)
+  var result = sodium.crypto_secretbox_open_easy(
+    plaintext, ciphertext, nonce, key
+  )
+  if (!result) return false
+  return plaintext
+}
+
 // Public-Key Cryptography
 // =======================
 
