@@ -41,7 +41,7 @@ var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
 exports.makeProjectReplicationKey = function () {
   var key = Buffer.alloc(STREAM_KEY_BYTES)
-  sodium.crypto_secretstream_xchacha20poly1305_keygen(key)
+  sodium.crypto_stream_keygen(key)
   return key
 }
 
