@@ -20,3 +20,10 @@ tape('signature', function (test) {
   test.assert(crypto.verify(object, keyPair.publicKey, 'signature'))
   test.end()
 })
+
+tape('hash', function (test) {
+  var input = 'this is some input'
+  var digest = crypto.hash(input)
+  test.assert(typeof digest === 'string')
+  test.end()
+})
