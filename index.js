@@ -56,34 +56,34 @@ exports.discoveryKeyLength = HASH_BYTES
 // Box Encryption
 // --------------
 
-var BOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
+var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
 exports.makeProjectReadKey = function () {
-  return randomBuffer(BOX_KEY_BYTES)
+  return randomBuffer(SECRETBOX_KEY_BYTES)
 }
 
-exports.projectReadKeyBytes = BOX_KEY_BYTES
+exports.projectReadKeyBytes = SECRETBOX_KEY_BYTES
 
-var BOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
+var SECRETBOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
 
 exports.randomNonce = function () {
-  return randomBuffer(BOX_NONCE_BYTES)
+  return randomBuffer(SECRETBOX_NONCE_BYTES)
 }
 
-exports.nonceBytes = BOX_NONCE_BYTES
+exports.nonceBytes = SECRETBOX_NONCE_BYTES
 
-var BOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
+var SECRETBOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
 
-exports.encryptionMACBytes = BOX_MAC_BYTES
+exports.encryptionMACBytes = SECRETBOX_MAC_BYTES
 
 exports.encrypt = function (plaintext, nonce, key) {
   assert(Buffer.isBuffer(plaintext))
   assert(plaintext.length > 0)
   assert(Buffer.isBuffer(nonce))
-  assert(nonce.length === BOX_NONCE_BYTES)
+  assert(nonce.length === SECRETBOX_NONCE_BYTES)
   assert(Buffer.isBuffer(key))
-  assert(key.length === BOX_KEY_BYTES)
-  var ciphertext = Buffer.alloc(plaintext.length + BOX_MAC_BYTES)
+  assert(key.length === SECRETBOX_KEY_BYTES)
+  var ciphertext = Buffer.alloc(plaintext.length + SECRETBOX_MAC_BYTES)
   sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
   return ciphertext
 }
@@ -92,10 +92,10 @@ exports.decrypt = function (ciphertext, nonce, key) {
   assert(Buffer.isBuffer(ciphertext))
   assert(ciphertext.length > 0)
   assert(Buffer.isBuffer(nonce))
-  assert(nonce.length === BOX_NONCE_BYTES)
+  assert(nonce.length === SECRETBOX_NONCE_BYTES)
   assert(Buffer.isBuffer(key))
-  assert(key.length === BOX_KEY_BYTES)
-  var plaintext = Buffer.alloc(ciphertext.length - BOX_MAC_BYTES)
+  assert(key.length === SECRETBOX_KEY_BYTES)
+  var plaintext = Buffer.alloc(ciphertext.length - SECRETBOX_MAC_BYTES)
   var result = sodium.crypto_secretbox_open_easy(
     plaintext, ciphertext, nonce, key
   )
