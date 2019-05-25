@@ -56,7 +56,7 @@ exports.discoveryKeyLength = HASH_BYTES
 // Box Encryption
 // --------------
 
-var BOX_SECRET_KEY_BYTES = sodium.crypto_box_SECRETKEYBYTES
+var BOX_SECRET_KEY_BYTES = 32 // sodium.crypto_box_SECRETKEYBYTES
 
 exports.makeProjectReadKey = function () {
   return randomBuffer(BOX_SECRET_KEY_BYTES)
