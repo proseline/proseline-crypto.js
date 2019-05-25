@@ -21,7 +21,7 @@ exports.plaintextEncoding = PLAINTEXT_ENCODING
 // Random Data
 // ===========
 
-function randomBuffer (bytes) {
+function random (bytes) {
   assert(Number.isInteger(bytes))
   assert(bytes > 0)
   var buffer = Buffer.alloc(bytes)
@@ -29,7 +29,7 @@ function randomBuffer (bytes) {
   return buffer.toString(RANDOM_ENCODING)
 }
 
-exports.randomBuffer = randomBuffer
+exports.random = random
 
 // Hashing
 // =======
@@ -56,7 +56,7 @@ exports.hash = hash
 var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
 exports.makeProjectReplicationKey = function () {
-  return randomBuffer(STREAM_KEY_BYTES)
+  return random(STREAM_KEY_BYTES)
 }
 
 exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
@@ -75,7 +75,7 @@ exports.discoveryKeyLength = DIGEST_BYTES
 var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
 exports.makeProjectReadKey = function () {
-  return randomBuffer(SECRETBOX_KEY_BYTES)
+  return random(SECRETBOX_KEY_BYTES)
 }
 
 exports.projectReadKeyBytes = SECRETBOX_KEY_BYTES
@@ -83,7 +83,7 @@ exports.projectReadKeyBytes = SECRETBOX_KEY_BYTES
 var SECRETBOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
 
 exports.randomNonce = function () {
-  return randomBuffer(SECRETBOX_NONCE_BYTES)
+  return random(SECRETBOX_NONCE_BYTES)
 }
 
 exports.nonceBytes = SECRETBOX_NONCE_BYTES
@@ -136,7 +136,7 @@ var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
 
 exports.makeSigningKeyPairSeed = function () {
-  return randomBuffer(SIGN_SEED_BYTES)
+  return random(SIGN_SEED_BYTES)
 }
 
 var SIGN_PUBLIC_KEY_BYTES = sodium.crypto_sign_PUBLICKEYBYTES

@@ -27,3 +27,9 @@ tape('hash', function (test) {
   test.assert(typeof digest === 'string')
   test.end()
 })
+
+tape('random', function (test) {
+  var random = crypto.random(32)
+  test.assert(typeof random === 'string')
+  test.end()
+})
