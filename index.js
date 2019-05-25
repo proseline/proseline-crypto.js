@@ -40,9 +40,7 @@ exports.hash = hash
 var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
 exports.makeProjectReplicationKey = function () {
-  var key = Buffer.alloc(STREAM_KEY_BYTES)
-  sodium.crypto_stream_keygen(key)
-  return key
+  return randomBuffer(STREAM_KEY_BYTES)
 }
 
 exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
