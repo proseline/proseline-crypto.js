@@ -55,13 +55,13 @@ exports.hash = hash
 
 var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
-exports.makeProjectReplicationKey = function () {
+exports.projectReplicationKey = function () {
   return random(STREAM_KEY_BYTES)
 }
 
 exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
 
-exports.makeDiscoveryKey = function (projectReplicationKey) {
+exports.discoveryKey = function (projectReplicationKey) {
   assert(typeof projectReplicationKey === 'string')
   assert(projectReplicationKey.length === STREAM_KEY_BYTES * 2)
   return hash(projectReplicationKey)
@@ -74,7 +74,7 @@ exports.discoveryKeyLength = DIGEST_BYTES
 
 var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
-exports.makeProjectReadKey = function () {
+exports.projectReadKey = function () {
   return random(SECRETBOX_KEY_BYTES)
 }
 
@@ -135,7 +135,7 @@ var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 
 exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
 
-exports.makeSigningKeyPairSeed = function () {
+exports.signingKeyPairSeed = function () {
   return random(SIGN_SEED_BYTES)
 }
 
@@ -147,7 +147,7 @@ var SIGN_SECRET_KEY_BYTES = sodium.crypto_sign_SECRETKEYBYTES
 
 exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
 
-exports.makeSigningKeyPairFromSeed = function (seed) {
+exports.signingKeyPairFromSeed = function (seed) {
   assert(typeof seed === 'string')
   assert(seed.length === SIGN_SEED_BYTES * 2)
   var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
@@ -163,7 +163,7 @@ exports.makeSigningKeyPairFromSeed = function (seed) {
   }
 }
 
-exports.makeSigningKeyPair = function () {
+exports.signingKeyPair = function () {
   var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
   sodium.crypto_sign_keypair(publicKeyBuffer, secretKeyBuffer)
