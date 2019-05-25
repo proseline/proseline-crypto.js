@@ -5,6 +5,9 @@
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
   "repository": "proseline/proseline-crypto.js",
   "license": "SEE LICENSE IN LICENSE",
+  "files": [
+    "index.js"
+  ],
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0",
     "nanoassert": "^2.0.0",
