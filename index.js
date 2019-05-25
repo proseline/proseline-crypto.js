@@ -175,6 +175,8 @@ exports.makeSigningKeyPair = function () {
 
 var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
 
+exports.signatureBytes = SIGNATURE_BYTES
+
 exports.sign = function (object, secretKey, key) {
   assert(typeof object === 'object')
   assert(object.hasOwnProperty('entry'))
@@ -189,6 +191,23 @@ exports.sign = function (object, secretKey, key) {
     Buffer.from(secretKey, KEY_ENCODING)
   )
   object[key] = signatureBuffer.toString(SIGNATURE_ENCODING)
+  return true
 }
 
-exports.signatureBytes = SIGNATURE_BYTES
+exports.verify = function (object, publicKey, key) {
+  assert(typeof object === 'object')
+  assert(object.hasOwnProperty('entry'))
+  assert(typeof publicKey === 'string')
+  assert(publicKey.length === SIGN_PUBLIC_KEY_BYTES * 2)
+  assert(typeof key === 'string')
+  assert(key.length > 0)
+  assert(object.hasOwnProperty(key))
+  assert(typeof object[key] === 'string')
+  assert(object[key].length > 0)
+  var signature = object[key]
+  return sodium.crypto_sign_verify_detached(
+    Buffer.from(signature, SIGNATURE_ENCODING),
+    Buffer.from(stringify(object.entry), 'utf8'),
+    Buffer.from(publicKey, KEY_ENCODING)
+  )
+}
