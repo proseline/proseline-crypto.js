@@ -110,17 +110,33 @@ exports.decrypt = function (ciphertext, nonce, key) {
 
 var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 
+exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
+
 exports.makeSigningKeyPairSeed = function () {
   var seed = Buffer.alloc(SIGN_SEED_BYTES)
   sodium.randombytes_buf(seed)
   return seed
 }
 
-exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
-
 var SIGN_PUBLIC_KEY_BYTES = sodium.crypto_sign_PUBLICKEYBYTES
 
+exports.signingPublicKeyBytes = SIGN_PUBLIC_KEY_BYTES
+
 var SIGN_SECRET_KEY_BYTES = sodium.crypto_sign_SECRETKEYBYTES
+
+exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
+
+exports.makeSigningKeyPairFromSeed = function (seed) {
+  assert(Buffer.isBuffer(seed))
+  assert(seed.length === SIGN_SEED_BYTES)
+  var publicKey = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
+  var secretKey = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
+  sodium.crypto_sign_seed_keypair(publicKey, secretKey, seed)
+  return {
+    secretKey: secretKey,
+    publicKey: publicKey
+  }
+}
 
 exports.makeSigningKeyPair = function () {
   var publicKey = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
@@ -131,10 +147,6 @@ exports.makeSigningKeyPair = function () {
     secretKey: secretKey
   }
 }
-
-exports.signingPublicKeyBytes = SIGN_PUBLIC_KEY_BYTES
-
-exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
 
 var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
 
