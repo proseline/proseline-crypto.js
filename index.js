@@ -2,6 +2,22 @@ var assert = require('nanoassert')
 var sodium = require('sodium-universal')
 var stringify = require('fast-json-stable-stringify')
 
+var DEFAULT_ENCODING = 'hex'
+var DIGEST_ENCODING = exports.digestEncoding = DEFAULT_ENCODING
+var KEY_ENCODING = exports.keyEncoding = DEFAULT_ENCODING
+var NONCE_ENCODING = exports.nonceEncoding = DEFAULT_ENCODING
+var RANDOM_ENCODING = exports.randomEncoding = DEFAULT_ENCODING
+var SEED_ENCODING = exports.seedEncoding = DEFAULT_ENCODING
+var SIGNATURE_ENCODING = exports.signatureEncoding = DEFAULT_ENCODING
+
+var CIPHERTEXT_ENCODING = 'base64'
+
+exports.ciphertextEncoding = CIPHERTEXT_ENCODING
+
+var PLAINTEXT_ENCODING = 'utf8'
+
+exports.plaintextEncoding = PLAINTEXT_ENCODING
+
 // Random Data
 // ===========
 
@@ -10,7 +26,7 @@ function randomBuffer (bytes) {
   assert(bytes > 0)
   var buffer = Buffer.alloc(bytes)
   sodium.randombytes_buf(buffer)
-  return buffer
+  return buffer.toString(RANDOM_ENCODING)
 }
 
 exports.randomBuffer = randomBuffer
@@ -18,15 +34,15 @@ exports.randomBuffer = randomBuffer
 // Hashing
 // =======
 
-var HASH_BYTES = sodium.crypto_generichash_BYTES
+var DIGEST_BYTES = sodium.crypto_generichash_BYTES
 
-exports.hashBytes = HASH_BYTES
+exports.digestBytes = DIGEST_BYTES
 
 function hash (input) {
-  assert(Buffer.isBuffer(input))
-  var digest = Buffer.alloc(HASH_BYTES)
-  sodium.crypto_generichash(digest, input)
-  return digest
+  assert(typeof input === 'string')
+  var digestBuffer = Buffer.alloc(DIGEST_BYTES)
+  sodium.crypto_generichash(digestBuffer, Buffer.from(input))
+  return digestBuffer.toString(DIGEST_ENCODING)
 }
 
 exports.hash = hash
@@ -46,12 +62,12 @@ exports.makeProjectReplicationKey = function () {
 exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
 
 exports.makeDiscoveryKey = function (projectReplicationKey) {
-  assert(Buffer.isBuffer(projectReplicationKey))
-  assert(projectReplicationKey.length === STREAM_KEY_BYTES)
+  assert(typeof projectReplicationKey === 'string')
+  assert(projectReplicationKey.length === STREAM_KEY_BYTES * 2)
   return hash(projectReplicationKey)
 }
 
-exports.discoveryKeyLength = HASH_BYTES
+exports.discoveryKeyLength = DIGEST_BYTES
 
 // Box Encryption
 // --------------
@@ -77,30 +93,39 @@ var SECRETBOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
 exports.encryptionMACBytes = SECRETBOX_MAC_BYTES
 
 exports.encrypt = function (plaintext, nonce, key) {
-  assert(Buffer.isBuffer(plaintext))
+  assert(typeof plaintext === 'string')
   assert(plaintext.length > 0)
-  assert(Buffer.isBuffer(nonce))
-  assert(nonce.length === SECRETBOX_NONCE_BYTES)
-  assert(Buffer.isBuffer(key))
-  assert(key.length === SECRETBOX_KEY_BYTES)
-  var ciphertext = Buffer.alloc(plaintext.length + SECRETBOX_MAC_BYTES)
-  sodium.crypto_secretbox_easy(ciphertext, plaintext, nonce, key)
-  return ciphertext
+  assert(typeof nonce === 'string')
+  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
+  assert(typeof key === 'string')
+  assert(key.length === SECRETBOX_KEY_BYTES * 2)
+  var ciphertextBuffer = Buffer.alloc(plaintext.length + SECRETBOX_MAC_BYTES)
+  sodium.crypto_secretbox_easy(
+    ciphertextBuffer,
+    Buffer.from(plaintext, PLAINTEXT_ENCODING),
+    Buffer.from(nonce, NONCE_ENCODING),
+    Buffer.from(key, KEY_ENCODING)
+  )
+  return ciphertextBuffer.toString(CIPHERTEXT_ENCODING)
 }
 
 exports.decrypt = function (ciphertext, nonce, key) {
-  assert(Buffer.isBuffer(ciphertext))
+  assert(typeof ciphertext === 'string')
   assert(ciphertext.length > 0)
-  assert(Buffer.isBuffer(nonce))
-  assert(nonce.length === SECRETBOX_NONCE_BYTES)
-  assert(Buffer.isBuffer(key))
-  assert(key.length === SECRETBOX_KEY_BYTES)
-  var plaintext = Buffer.alloc(ciphertext.length - SECRETBOX_MAC_BYTES)
+  assert(typeof nonce === 'string')
+  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
+  assert(typeof key === 'string')
+  assert(key.length === SECRETBOX_KEY_BYTES * 2)
+  var ciphertextBuffer = Buffer.from(ciphertext, CIPHERTEXT_ENCODING)
+  var plaintextBuffer = Buffer.alloc(ciphertextBuffer.length - SECRETBOX_MAC_BYTES)
   var result = sodium.crypto_secretbox_open_easy(
-    plaintext, ciphertext, nonce, key
+    plaintextBuffer,
+    ciphertextBuffer,
+    Buffer.from(nonce, NONCE_ENCODING),
+    Buffer.from(key, KEY_ENCODING)
   )
   if (!result) return false
-  return plaintext
+  return plaintextBuffer.toString(PLAINTEXT_ENCODING)
 }
 
 // Public-Key Cryptography
@@ -111,9 +136,7 @@ var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
 
 exports.makeSigningKeyPairSeed = function () {
-  var seed = Buffer.alloc(SIGN_SEED_BYTES)
-  sodium.randombytes_buf(seed)
-  return seed
+  return randomBuffer(SIGN_SEED_BYTES)
 }
 
 var SIGN_PUBLIC_KEY_BYTES = sodium.crypto_sign_PUBLICKEYBYTES
@@ -125,24 +148,28 @@ var SIGN_SECRET_KEY_BYTES = sodium.crypto_sign_SECRETKEYBYTES
 exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
 
 exports.makeSigningKeyPairFromSeed = function (seed) {
-  assert(Buffer.isBuffer(seed))
-  assert(seed.length === SIGN_SEED_BYTES)
-  var publicKey = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
-  var secretKey = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
-  sodium.crypto_sign_seed_keypair(publicKey, secretKey, seed)
+  assert(typeof seed === 'string')
+  assert(seed.length === SIGN_SEED_BYTES * 2)
+  var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
+  var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
+  sodium.crypto_sign_seed_keypair(
+    publicKeyBuffer,
+    secretKeyBuffer,
+    Buffer.from(seed, SEED_ENCODING)
+  )
   return {
-    secretKey: secretKey,
-    publicKey: publicKey
+    secretKey: secretKeyBuffer.toString(KEY_ENCODING),
+    publicKey: publicKeyBuffer.toString(KEY_ENCODING)
   }
 }
 
 exports.makeSigningKeyPair = function () {
-  var publicKey = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
-  var secretKey = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
-  sodium.crypto_sign_keypair(publicKey, secretKey)
+  var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
+  var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
+  sodium.crypto_sign_keypair(publicKeyBuffer, secretKeyBuffer)
   return {
-    publicKey: publicKey,
-    secretKey: secretKey
+    publicKey: publicKeyBuffer.toString(KEY_ENCODING),
+    secretKey: secretKeyBuffer.toString(KEY_ENCODING)
   }
 }
 
@@ -151,17 +178,17 @@ var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
 exports.sign = function (object, secretKey, key) {
   assert(typeof object === 'object')
   assert(object.hasOwnProperty('entry'))
-  assert(Buffer.isBuffer(secretKey))
-  assert(secretKey.length === SIGN_SECRET_KEY_BYTES)
+  assert(typeof secretKey === 'string')
+  assert(secretKey.length === SIGN_SECRET_KEY_BYTES * 2)
   assert(typeof key === 'string')
   assert(key.length > 0)
-  var signature = Buffer.alloc(SIGNATURE_BYTES)
+  var signatureBuffer = Buffer.alloc(SIGNATURE_BYTES)
   sodium.crypto_sign_detached(
-    signature,
+    signatureBuffer,
     Buffer.from(stringify(object.entry), 'utf8'),
-    secretKey
+    Buffer.from(secretKey, KEY_ENCODING)
   )
-  object[key] = signature.toString('hex')
+  object[key] = signatureBuffer.toString(SIGNATURE_ENCODING)
 }
 
 exports.signatureBytes = SIGNATURE_BYTES

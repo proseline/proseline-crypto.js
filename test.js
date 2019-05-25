@@ -2,7 +2,7 @@ var tape = require('tape')
 var crypto = require('./')
 
 tape('encryption round trip', function (test) {
-  var plaintext = crypto.randomBuffer(128)
+  var plaintext = 'plaintext message'
   var key = crypto.makeProjectReadKey()
   var nonce = crypto.randomNonce()
   var encrypted = crypto.encrypt(plaintext, nonce, key)
