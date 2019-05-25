@@ -11,7 +11,26 @@ tape('encryption round trip', function (test) {
   test.end()
 })
 
+tape('bad decryption', function (test) {
+  var random = Buffer.from(crypto.random(64), 'hex')
+    .toString(crypto.ciphertextEncoding)
+  var key = crypto.makeProjectReadKey()
+  var nonce = crypto.randomNonce()
+  var decrypted = crypto.decrypt(random, nonce, key)
+  test.assert(decrypted === false)
+  test.end()
+})
+
 tape('signature', function (test) {
+  var plaintext = 'plaintext message'
+  var keyPair = crypto.makeSigningKeyPair()
+  var object = { entry: plaintext }
+  crypto.sign(object, keyPair.secretKey, 'signature')
+  test.assert(crypto.verify(object, keyPair.publicKey, 'signature'))
+  test.end()
+})
+
+tape('signature with keys from seed', function (test) {
   var plaintext = 'plaintext message'
   var seed = crypto.makeSigningKeyPairSeed()
   var keyPair = crypto.makeSigningKeyPairFromSeed(seed)
@@ -31,5 +50,19 @@ tape('hash', function (test) {
 tape('random', function (test) {
   var random = crypto.random(32)
   test.assert(typeof random === 'string')
+  test.end()
+})
+
+tape('read key', function (test) {
+  var key = crypto.makeProjectReadKey()
+  test.assert(typeof key === 'string')
+  test.end()
+})
+
+tape('discovery key', function (test) {
+  var projectReplicationKey = crypto.makeProjectReplicationKey()
+  test.assert(typeof projectReplicationKey === 'string')
+  var projectDiscoverKey = crypto.makeDiscoveryKey(projectReplicationKey)
+  test.assert(typeof projectDiscoverKey === 'string')
   test.end()
 })
