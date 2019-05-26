@@ -177,17 +177,21 @@ var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
 
 exports.signatureBytes = SIGNATURE_BYTES
 
-exports.sign = function (object, secretKey, signatureKey) {
+exports.sign = function (object, secretKey, signatureKey, bodyKey) {
+  bodyKey = bodyKey || 'entry'
   assert(typeof object === 'object')
-  assert(object.hasOwnProperty('entry'))
   assert(typeof secretKey === 'string')
   assert(secretKey.length === SIGN_SECRET_KEY_BYTES * 2)
   assert(typeof signatureKey === 'string')
   assert(signatureKey.length > 0)
+  assert(typeof bodyKey === 'string')
+  assert(bodyKey.length > 0)
+  assert(object.hasOwnProperty(bodyKey))
+  var body = object[bodyKey]
   var signatureBuffer = Buffer.alloc(SIGNATURE_BYTES)
   sodium.crypto_sign_detached(
     signatureBuffer,
-    Buffer.from(stringify(object.entry), 'utf8'),
+    Buffer.from(stringify(body), 'utf8'),
     Buffer.from(secretKey, KEY_ENCODING)
   )
   object[signatureKey] = signatureBuffer.toString(SIGNATURE_ENCODING)
