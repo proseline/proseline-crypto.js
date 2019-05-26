@@ -194,9 +194,9 @@ exports.sign = function (object, secretKey, key) {
   return true
 }
 
-exports.verify = function (object, publicKey, signatureKey) {
+exports.verify = function (object, publicKey, signatureKey, bodyKey) {
+  bodyKey = bodyKey || 'entry'
   assert(typeof object === 'object')
-  assert(object.hasOwnProperty('entry'))
   assert(typeof publicKey === 'string')
   assert(publicKey.length === SIGN_PUBLIC_KEY_BYTES * 2)
   assert(typeof signatureKey === 'string')
@@ -204,10 +204,14 @@ exports.verify = function (object, publicKey, signatureKey) {
   assert(object.hasOwnProperty(signatureKey))
   assert(typeof object[signatureKey] === 'string')
   assert(object[signatureKey].length > 0)
+  assert(typeof bodyKey === 'string')
+  assert(bodyKey.length > 0)
+  assert(object.hasOwnProperty(bodyKey))
   var signature = object[signatureKey]
+  var body = object[bodyKey]
   return sodium.crypto_sign_verify_detached(
     Buffer.from(signature, SIGNATURE_ENCODING),
-    Buffer.from(stringify(object.entry), 'utf8'),
+    Buffer.from(stringify(body), 'utf8'),
     Buffer.from(publicKey, KEY_ENCODING)
   )
 }
