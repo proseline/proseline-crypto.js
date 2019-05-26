@@ -4,60 +4,58 @@ var crypto = require('./')
 tape('encryption round trip', function (test) {
   var plaintext = 'plaintext message'
   var key = crypto.projectReadKey()
-  var nonce = crypto.randomNonce()
-  var encrypted = crypto.encryptUTF8(plaintext, nonce, key)
-  var decrypted = crypto.decryptUTF8(encrypted, nonce, key)
+  var nonce = crypto.nonce()
+  var encrypted = crypto.encryptString(plaintext, nonce, key)
+  var decrypted = crypto.decryptString(encrypted, nonce, key)
   test.same(plaintext, decrypted, 'identical')
   test.end()
 })
 
 tape('bad decryption', function (test) {
-  var random = Buffer.from(crypto.random(64), 'hex')
-    .toString(crypto.ciphertextEncoding)
+  var random = crypto.random(64)
   var key = crypto.projectReadKey()
-  var nonce = crypto.randomNonce()
-  var decrypted = crypto.decryptUTF8(random, nonce, key)
+  var nonce = crypto.nonce()
+  var decrypted = crypto.decryptString(random, nonce, key)
   test.assert(decrypted === false)
   test.end()
 })
 
-tape('hex encryption round trip', function (test) {
-  var hex = crypto.random(32)
+tape('binary encryption round trip', function (test) {
+  var binary = crypto.random(32)
   var key = crypto.projectReadKey()
-  var nonce = crypto.randomNonce()
-  var encrypted = crypto.encryptHex(hex, nonce, key)
-  var decrypted = crypto.decryptHex(encrypted, nonce, key)
-  test.same(hex, decrypted, 'identical')
+  var nonce = crypto.nonce()
+  var encrypted = crypto.encryptBinary(binary, nonce, key)
+  var decrypted = crypto.decryptBinary(encrypted, nonce, key)
+  test.same(binary, decrypted, 'identical')
   test.end()
 })
 
-tape('hex bad decryption', function (test) {
+tape('binary bad decryption', function (test) {
   var random = crypto.random(32)
   var key = crypto.projectReadKey()
-  var nonce = crypto.randomNonce()
-  var decrypted = crypto.decryptHex(random, nonce, key)
+  var nonce = crypto.nonce()
+  var decrypted = crypto.decryptBinary(random, nonce, key)
   test.assert(decrypted === false)
   test.end()
 })
 
 tape('signature', function (test) {
-  var plaintext = 'plaintext message'
   var keyPair = crypto.signingKeyPair()
-  var object = { entry: plaintext }
-  crypto.sign(object, keyPair.secretKey, 'signature')
-  test.assert(crypto.verify(object, keyPair.publicKey, 'signature'))
+  var object = { entry: 'plaintext message' }
+  var signature = crypto.signJSON(object, keyPair.secretKey)
+  test.assert(
+    crypto.verifyJSON(object, signature, keyPair.publicKey)
+  )
   test.end()
 })
 
 tape('signature with body key', function (test) {
-  var plaintext = 'plaintext message'
   var keyPair = crypto.signingKeyPair()
-  var bodyKey = 'xxx'
-  var signatureKey = 'signature'
-  var object = {}
-  object[bodyKey] = plaintext
-  crypto.sign(object, keyPair.secretKey, signatureKey, bodyKey)
-  test.assert(crypto.verify(object, keyPair.publicKey, signatureKey, bodyKey))
+  var object = { text: 'plaintext message' }
+  var signature = crypto.signJSON(object, keyPair.secretKey)
+  test.assert(
+    crypto.verifyJSON(object, signature, keyPair.publicKey)
+  )
   test.end()
 })
 
@@ -66,8 +64,10 @@ tape('signature with keys from seed', function (test) {
   var seed = crypto.signingKeyPairSeed()
   var keyPair = crypto.signingKeyPairFromSeed(seed)
   var object = { entry: plaintext }
-  crypto.sign(object, keyPair.secretKey, 'signature')
-  test.assert(crypto.verify(object, keyPair.publicKey, 'signature'))
+  var signature = crypto.signJSON(object, keyPair.secretKey)
+  test.assert(
+    crypto.verifyJSON(object, signature, keyPair.publicKey)
+  )
   test.end()
 })
 

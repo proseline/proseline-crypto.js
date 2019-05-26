@@ -2,37 +2,23 @@ var assert = require('nanoassert')
 var sodium = require('sodium-universal')
 var stringify = require('fast-json-stable-stringify')
 
-var DEFAULT_ENCODING = 'hex'
-var DIGEST_ENCODING = exports.digestEncoding = DEFAULT_ENCODING
-var KEY_ENCODING = exports.keyEncoding = DEFAULT_ENCODING
-var NONCE_ENCODING = exports.nonceEncoding = DEFAULT_ENCODING
-var RANDOM_ENCODING = exports.randomEncoding = DEFAULT_ENCODING
-var SEED_ENCODING = exports.seedEncoding = DEFAULT_ENCODING
-var SIGNATURE_ENCODING = exports.signatureEncoding = DEFAULT_ENCODING
+var BINARY_ENCODING = 'base64'
 
-var CIPHERTEXT_ENCODING = 'base64'
-
-exports.ciphertextEncoding = CIPHERTEXT_ENCODING
-
-var PLAINTEXT_ENCODING = 'utf8'
-
-exports.plaintextEncoding = PLAINTEXT_ENCODING
+exports.binaryEncoding = BINARY_ENCODING
 
 // Random Data
-// ===========
 
 function random (bytes) {
   assert(Number.isInteger(bytes))
   assert(bytes > 0)
   var buffer = Buffer.alloc(bytes)
   sodium.randombytes_buf(buffer)
-  return buffer.toString(RANDOM_ENCODING)
+  return buffer.toString(BINARY_ENCODING)
 }
 
 exports.random = random
 
 // Hashing
-// =======
 
 var DIGEST_BYTES = sodium.crypto_generichash_BYTES
 
@@ -42,16 +28,12 @@ function hash (input) {
   assert(typeof input === 'string')
   var digestBuffer = Buffer.alloc(DIGEST_BYTES)
   sodium.crypto_generichash(digestBuffer, Buffer.from(input))
-  return digestBuffer.toString(DIGEST_ENCODING)
+  return digestBuffer.toString(BINARY_ENCODING)
 }
 
 exports.hash = hash
 
-// Secret-Key Cryptography
-// =======================
-
 // Stream Encryption
-// -----------------
 
 var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
@@ -63,14 +45,12 @@ exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
 
 exports.discoveryKey = function (projectReplicationKey) {
   assert(typeof projectReplicationKey === 'string')
-  assert(projectReplicationKey.length === STREAM_KEY_BYTES * 2)
   return hash(projectReplicationKey)
 }
 
 exports.discoveryKeyLength = DIGEST_BYTES
 
 // Box Encryption
-// --------------
 
 var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
@@ -82,7 +62,7 @@ exports.projectReadKeyBytes = SECRETBOX_KEY_BYTES
 
 var SECRETBOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
 
-exports.randomNonce = function () {
+exports.nonce = function () {
   return random(SECRETBOX_NONCE_BYTES)
 }
 
@@ -92,83 +72,52 @@ var SECRETBOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
 
 exports.encryptionMACBytes = SECRETBOX_MAC_BYTES
 
-exports.encryptUTF8 = function (plaintext, nonce, key) {
-  assert(typeof plaintext === 'string')
-  assert(plaintext.length > 0)
-  assert(typeof nonce === 'string')
-  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
-  assert(typeof key === 'string')
-  assert(key.length === SECRETBOX_KEY_BYTES * 2)
-  var ciphertextBuffer = Buffer.alloc(plaintext.length + SECRETBOX_MAC_BYTES)
-  sodium.crypto_secretbox_easy(
-    ciphertextBuffer,
-    Buffer.from(plaintext, PLAINTEXT_ENCODING),
-    Buffer.from(nonce, NONCE_ENCODING),
-    Buffer.from(key, KEY_ENCODING)
-  )
-  return ciphertextBuffer.toString(CIPHERTEXT_ENCODING)
+var inputTypes = {
+  JSON: 'json',
+  String: 'utf8',
+  Binary: 'base64'
 }
 
-exports.decryptUTF8 = function (ciphertext, nonce, key) {
-  assert(typeof ciphertext === 'string')
-  assert(ciphertext.length > 0)
-  assert(typeof nonce === 'string')
-  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
-  assert(typeof key === 'string')
-  assert(key.length === SECRETBOX_KEY_BYTES * 2)
-  var ciphertextBuffer = Buffer.from(ciphertext, CIPHERTEXT_ENCODING)
-  var plaintextBuffer = Buffer.alloc(ciphertextBuffer.length - SECRETBOX_MAC_BYTES)
-  var result = sodium.crypto_secretbox_open_easy(
-    plaintextBuffer,
-    ciphertextBuffer,
-    Buffer.from(nonce, NONCE_ENCODING),
-    Buffer.from(key, KEY_ENCODING)
-  )
-  if (!result) return false
-  return plaintextBuffer.toString(PLAINTEXT_ENCODING)
-}
+Object.keys(inputTypes).forEach(function (suffix) {
+  var encoding = inputTypes[suffix]
+  exports['encrypt' + suffix] = function (plaintext, nonce, key) {
+    return encrypt(plaintext, encoding, nonce, key)
+  }
+  exports['decrypt' + suffix] = function (ciphertext, nonce, key) {
+    return decrypt(ciphertext, encoding, nonce, key)
+  }
+})
 
-exports.encryptHex = function (hex, nonce, key) {
-  assert(typeof hex === 'string')
-  assert(hex.length > 0)
-  assert(typeof nonce === 'string')
-  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
-  assert(typeof key === 'string')
-  assert(key.length === SECRETBOX_KEY_BYTES * 2)
-  var plaintextBuffer = Buffer.from(hex, 'hex')
+function encrypt (plaintext, encoding, nonce, key) {
+  var plaintextBuffer = decode(plaintext, encoding)
   var ciphertextBuffer = Buffer.alloc(
     plaintextBuffer.length + SECRETBOX_MAC_BYTES
   )
   sodium.crypto_secretbox_easy(
     ciphertextBuffer,
     plaintextBuffer,
-    Buffer.from(nonce, NONCE_ENCODING),
-    Buffer.from(key, KEY_ENCODING)
+    Buffer.from(nonce, BINARY_ENCODING),
+    Buffer.from(key, BINARY_ENCODING)
   )
-  return ciphertextBuffer.toString(KEY_ENCODING)
+  return ciphertextBuffer.toString(BINARY_ENCODING)
 }
 
-exports.decryptHex = function (ciphertext, nonce, key) {
-  assert(typeof ciphertext === 'string')
-  assert(ciphertext.length > 0)
-  assert(typeof nonce === 'string')
-  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
-  assert(typeof key === 'string')
-  assert(key.length === SECRETBOX_KEY_BYTES * 2)
-  var ciphertextBuffer = Buffer.from(ciphertext, KEY_ENCODING)
-  var plaintextBuffer = Buffer.alloc(ciphertextBuffer.length - SECRETBOX_MAC_BYTES)
+function decrypt (ciphertext, encoding, nonce, key) {
+  var ciphertextBuffer = decode(ciphertext, BINARY_ENCODING)
+  var plaintextBuffer = Buffer.alloc(
+    ciphertextBuffer.length - SECRETBOX_MAC_BYTES
+  )
   var result = sodium.crypto_secretbox_open_easy(
     plaintextBuffer,
     ciphertextBuffer,
-    Buffer.from(nonce, NONCE_ENCODING),
-    Buffer.from(key, KEY_ENCODING)
+    Buffer.from(nonce, BINARY_ENCODING),
+    Buffer.from(key, BINARY_ENCODING)
   )
   if (!result) return false
-  return plaintextBuffer.toString(KEY_ENCODING)
+  return encode(plaintextBuffer, encoding)
 }
 
-// Public-Key Cryptography
-// =======================
+// Signature
 
 var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 
@@ -188,17 +137,16 @@ exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
 
 exports.signingKeyPairFromSeed = function (seed) {
   assert(typeof seed === 'string')
-  assert(seed.length === SIGN_SEED_BYTES * 2)
   var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
   sodium.crypto_sign_seed_keypair(
     publicKeyBuffer,
     secretKeyBuffer,
-    Buffer.from(seed, SEED_ENCODING)
+    Buffer.from(seed, BINARY_ENCODING)
   )
   return {
-    secretKey: secretKeyBuffer.toString(KEY_ENCODING),
-    publicKey: publicKeyBuffer.toString(KEY_ENCODING)
+    secretKey: secretKeyBuffer.toString(BINARY_ENCODING),
+    publicKey: publicKeyBuffer.toString(BINARY_ENCODING)
   }
 }
 
@@ -207,8 +155,8 @@ exports.signingKeyPair = function () {
   var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
   sodium.crypto_sign_keypair(publicKeyBuffer, secretKeyBuffer)
   return {
-    publicKey: publicKeyBuffer.toString(KEY_ENCODING),
-    secretKey: secretKeyBuffer.toString(KEY_ENCODING)
+    publicKey: publicKeyBuffer.toString(BINARY_ENCODING),
+    secretKey: secretKeyBuffer.toString(BINARY_ENCODING)
   }
 }
 
@@ -216,42 +164,55 @@ var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
 
 exports.signatureBytes = SIGNATURE_BYTES
 
-exports.sign = function (object, secretKey, signatureKey, bodyKey) {
-  bodyKey = bodyKey || 'entry'
-  assert(typeof object === 'object')
+Object.keys(inputTypes).forEach(function (suffix) {
+  var encoding = inputTypes[suffix]
+  exports['sign' + suffix] = function (object, secretKey) {
+    return sign(object, encoding, secretKey)
+  }
+  exports['verify' + suffix] = function (message, signature, publicKey) {
+    return verify(message, encoding, signature, publicKey)
+  }
+})
+
+function sign (message, messageEncoding, secretKey) {
   assert(typeof secretKey === 'string')
-  assert(secretKey.length === SIGN_SECRET_KEY_BYTES * 2)
-  assert(typeof signatureKey === 'string')
-  assert(signatureKey.length > 0)
-  assert(typeof bodyKey === 'string')
-  assert(object.hasOwnProperty(bodyKey))
-  var body = object[bodyKey]
   var signatureBuffer = Buffer.alloc(SIGNATURE_BYTES)
   sodium.crypto_sign_detached(
     signatureBuffer,
-    Buffer.from(stringify(body), 'utf8'),
-    Buffer.from(secretKey, KEY_ENCODING)
+    decode(message, messageEncoding),
+    Buffer.from(secretKey, BINARY_ENCODING)
   )
-  object[signatureKey] = signatureBuffer.toString(SIGNATURE_ENCODING)
-  return true
+  return signatureBuffer.toString(BINARY_ENCODING)
 }
 
-exports.verify = function (object, publicKey, signatureKey, bodyKey) {
-  bodyKey = bodyKey || 'entry'
-  assert(typeof object === 'object')
+function verify (message, encoding, signature, publicKey) {
+  assert(typeof signature === 'string')
   assert(typeof publicKey === 'string')
-  assert(publicKey.length === SIGN_PUBLIC_KEY_BYTES * 2)
-  assert(typeof signatureKey === 'string')
-  assert(object.hasOwnProperty(signatureKey))
-  assert(typeof object[signatureKey] === 'string')
-  assert(object[signatureKey].length > 0)
-  assert(typeof bodyKey === 'string')
-  assert(object.hasOwnProperty(bodyKey))
-  var signature = object[signatureKey]
-  var body = object[bodyKey]
   return sodium.crypto_sign_verify_detached(
-    Buffer.from(signature, SIGNATURE_ENCODING),
-    Buffer.from(stringify(body), 'utf8'),
-    Buffer.from(publicKey, KEY_ENCODING)
+    Buffer.from(signature, BINARY_ENCODING),
+    decode(message, encoding),
+    Buffer.from(publicKey, BINARY_ENCODING)
   )
+}
+
+function encode (buffer, encoding) {
+  assert(Buffer.isBuffer(buffer))
+  if (encoding === 'base64' || encoding === 'utf8') {
+    return buffer.toString(encoding)
+  }
+  if (encoding === 'json') {
+    return JSON.parse(buffer)
+  }
+  throw new Error('unsupported encoding: ' + encoding)
+}
+
+function decode (message, encoding) {
+  assert(message !== undefined)
+  if (encoding === 'base64' || encoding === 'utf8') {
+    return Buffer.from(message, encoding)
+  }
+  if (encoding === 'json') {
+    return Buffer.from(stringify(message), 'utf8')
+  }
+  throw new Error('unsupported encoding: ' + encoding)
 }
