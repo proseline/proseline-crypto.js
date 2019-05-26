@@ -3,7 +3,7 @@ var crypto = require('./')
 
 tape('encryption round trip', function (test) {
   var plaintext = 'plaintext message'
-  var key = crypto.projectReadKey()
+  var key = crypto.encryptionKey()
   var nonce = crypto.nonce()
   var encrypted = crypto.encryptString(plaintext, nonce, key)
   var decrypted = crypto.decryptString(encrypted, nonce, key)
@@ -13,7 +13,7 @@ tape('encryption round trip', function (test) {
 
 tape('bad decryption', function (test) {
   var random = crypto.random(64)
-  var key = crypto.projectReadKey()
+  var key = crypto.encryptionKey()
   var nonce = crypto.nonce()
   var decrypted = crypto.decryptString(random, nonce, key)
   test.assert(decrypted === false)
@@ -22,7 +22,7 @@ tape('bad decryption', function (test) {
 
 tape('binary encryption round trip', function (test) {
   var binary = crypto.random(32)
-  var key = crypto.projectReadKey()
+  var key = crypto.encryptionKey()
   var nonce = crypto.nonce()
   var encrypted = crypto.encryptBinary(binary, nonce, key)
   var decrypted = crypto.decryptBinary(encrypted, nonce, key)
@@ -32,7 +32,7 @@ tape('binary encryption round trip', function (test) {
 
 tape('binary bad decryption', function (test) {
   var random = crypto.random(32)
-  var key = crypto.projectReadKey()
+  var key = crypto.encryptionKey()
   var nonce = crypto.nonce()
   var decrypted = crypto.decryptBinary(random, nonce, key)
   test.assert(decrypted === false)
@@ -85,15 +85,15 @@ tape('random', function (test) {
 })
 
 tape('read key', function (test) {
-  var key = crypto.projectReadKey()
+  var key = crypto.encryptionKey()
   test.assert(typeof key === 'string')
   test.end()
 })
 
 tape('discovery key', function (test) {
-  var projectReplicationKey = crypto.projectReplicationKey()
-  test.assert(typeof projectReplicationKey === 'string')
-  var projectDiscoverKey = crypto.discoveryKey(projectReplicationKey)
+  var replicationKey = crypto.replicationKey()
+  test.assert(typeof replicationKey === 'string')
+  var projectDiscoverKey = crypto.discoveryKey(replicationKey)
   test.assert(typeof projectDiscoverKey === 'string')
   test.end()
 })

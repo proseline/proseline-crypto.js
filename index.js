@@ -37,15 +37,15 @@ exports.hash = hash
 
 var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
 
-exports.projectReplicationKey = function () {
+exports.replicationKey = function () {
   return random(STREAM_KEY_BYTES)
 }
 
-exports.projectReplicationKeyBytes = STREAM_KEY_BYTES
+exports.replicationKeyBytes = STREAM_KEY_BYTES
 
-exports.discoveryKey = function (projectReplicationKey) {
-  assert(typeof projectReplicationKey === 'string')
-  return hash(projectReplicationKey)
+exports.discoveryKey = function (replicationKey) {
+  assert(typeof replicationKey === 'string')
+  return hash(replicationKey)
 }
 
 exports.discoveryKeyLength = DIGEST_BYTES
@@ -54,11 +54,11 @@ exports.discoveryKeyLength = DIGEST_BYTES
 
 var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
 
-exports.projectReadKey = function () {
+exports.encryptionKey = function () {
   return random(SECRETBOX_KEY_BYTES)
 }
 
-exports.projectReadKeyBytes = SECRETBOX_KEY_BYTES
+exports.encryptionKeyBytes = SECRETBOX_KEY_BYTES
 
 var SECRETBOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
 
