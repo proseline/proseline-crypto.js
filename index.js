@@ -2,9 +2,7 @@ var assert = require('nanoassert')
 var sodium = require('sodium-universal')
 var stringify = require('fast-json-stable-stringify')
 
-var BINARY_ENCODING = 'base64'
-
-exports.binaryEncoding = BINARY_ENCODING
+var BINARY_ENCODING = exports.binaryEncoding = 'base64'
 
 // Random Data
 
@@ -20,9 +18,7 @@ exports.random = random
 
 // Hashing
 
-var DIGEST_BYTES = sodium.crypto_generichash_BYTES
-
-exports.digestBytes = DIGEST_BYTES
+var DIGEST_BYTES = exports.digestBytes = sodium.crypto_generichash_BYTES
 
 function hash (input) {
   assert(typeof input === 'string')
@@ -35,13 +31,13 @@ exports.hash = hash
 
 // Stream Encryption
 
-var STREAM_KEY_BYTES = sodium.crypto_stream_KEYBYTES
+var STREAM_KEY_BYTES =
+exports.replicationKeyBytes =
+sodium.crypto_stream_KEYBYTES
 
 exports.replicationKey = function () {
   return random(STREAM_KEY_BYTES)
 }
-
-exports.replicationKeyBytes = STREAM_KEY_BYTES
 
 exports.discoveryKey = function (replicationKey) {
   assert(typeof replicationKey === 'string')
@@ -52,25 +48,25 @@ exports.discoveryKeyLength = DIGEST_BYTES
 
 // Box Encryption
 
-var SECRETBOX_KEY_BYTES = sodium.crypto_secretbox_KEYBYTES
+var SECRETBOX_KEY_BYTES =
+exports.encryptionKeyBytes =
+sodium.crypto_secretbox_KEYBYTES
 
 exports.encryptionKey = function () {
   return random(SECRETBOX_KEY_BYTES)
 }
 
-exports.encryptionKeyBytes = SECRETBOX_KEY_BYTES
-
-var SECRETBOX_NONCE_BYTES = sodium.crypto_secretbox_NONCEBYTES
+var SECRETBOX_NONCE_BYTES =
+exports.nonceBytes =
+sodium.crypto_secretbox_NONCEBYTES
 
 exports.nonce = function () {
   return random(SECRETBOX_NONCE_BYTES)
 }
 
-exports.nonceBytes = SECRETBOX_NONCE_BYTES
-
-var SECRETBOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
-
-exports.encryptionMACBytes = SECRETBOX_MAC_BYTES
+var SECRETBOX_MAC_BYTES =
+exports.encryptionMACBytes =
+sodium.crypto_secretbox_MACBYTES
 
 var inputTypes = {
   JSON: 'json',
@@ -119,21 +115,21 @@ function decrypt (ciphertext, encoding, nonce, key) {
 
 // Signature
 
-var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
-
-exports.keyPairSeedBytes = SIGN_SEED_BYTES
+var SIGN_SEED_BYTES =
+exports.keyPairSeedBytes =
+sodium.crypto_sign_SEEDBYTES
 
 exports.keyPairSeed = function () {
   return random(SIGN_SEED_BYTES)
 }
 
-var SIGN_PUBLIC_KEY_BYTES = sodium.crypto_sign_PUBLICKEYBYTES
+var SIGN_PUBLIC_KEY_BYTES =
+exports.publicKeyBytes =
+sodium.crypto_sign_PUBLICKEYBYTES
 
-exports.publicKeyBytes = SIGN_PUBLIC_KEY_BYTES
-
-var SIGN_SECRET_KEY_BYTES = sodium.crypto_sign_SECRETKEYBYTES
-
-exports.secretKeyBytes = SIGN_SECRET_KEY_BYTES
+var SIGN_SECRET_KEY_BYTES =
+exports.secretKeyBytes =
+sodium.crypto_sign_SECRETKEYBYTES
 
 exports.keyPairFromSeed = function (seed) {
   assert(typeof seed === 'string')
@@ -160,9 +156,9 @@ exports.keyPair = function () {
   }
 }
 
-var SIGNATURE_BYTES = sodium.crypto_sign_BYTES
-
-exports.signatureBytes = SIGNATURE_BYTES
+var SIGNATURE_BYTES =
+exports.signatureBytes =
+sodium.crypto_sign_BYTES
 
 Object.keys(inputTypes).forEach(function (suffix) {
   var encoding = inputTypes[suffix]
