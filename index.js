@@ -92,7 +92,7 @@ var SECRETBOX_MAC_BYTES = sodium.crypto_secretbox_MACBYTES
 
 exports.encryptionMACBytes = SECRETBOX_MAC_BYTES
 
-exports.encrypt = function (plaintext, nonce, key) {
+exports.encryptUTF8 = function (plaintext, nonce, key) {
   assert(typeof plaintext === 'string')
   assert(plaintext.length > 0)
   assert(typeof nonce === 'string')
@@ -109,7 +109,7 @@ exports.encrypt = function (plaintext, nonce, key) {
   return ciphertextBuffer.toString(CIPHERTEXT_ENCODING)
 }
 
-exports.decrypt = function (ciphertext, nonce, key) {
+exports.decryptUTF8 = function (ciphertext, nonce, key) {
   assert(typeof ciphertext === 'string')
   assert(ciphertext.length > 0)
   assert(typeof nonce === 'string')
@@ -126,6 +126,45 @@ exports.decrypt = function (ciphertext, nonce, key) {
   )
   if (!result) return false
   return plaintextBuffer.toString(PLAINTEXT_ENCODING)
+}
+
+exports.encryptHex = function (hex, nonce, key) {
+  assert(typeof hex === 'string')
+  assert(hex.length > 0)
+  assert(typeof nonce === 'string')
+  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
+  assert(typeof key === 'string')
+  assert(key.length === SECRETBOX_KEY_BYTES * 2)
+  var plaintextBuffer = Buffer.from(hex, 'hex')
+  var ciphertextBuffer = Buffer.alloc(
+    plaintextBuffer.length + SECRETBOX_MAC_BYTES
+  )
+  sodium.crypto_secretbox_easy(
+    ciphertextBuffer,
+    plaintextBuffer,
+    Buffer.from(nonce, NONCE_ENCODING),
+    Buffer.from(key, KEY_ENCODING)
+  )
+  return ciphertextBuffer.toString(KEY_ENCODING)
+}
+
+exports.decryptHex = function (ciphertext, nonce, key) {
+  assert(typeof ciphertext === 'string')
+  assert(ciphertext.length > 0)
+  assert(typeof nonce === 'string')
+  assert(nonce.length === SECRETBOX_NONCE_BYTES * 2)
+  assert(typeof key === 'string')
+  assert(key.length === SECRETBOX_KEY_BYTES * 2)
+  var ciphertextBuffer = Buffer.from(ciphertext, KEY_ENCODING)
+  var plaintextBuffer = Buffer.alloc(ciphertextBuffer.length - SECRETBOX_MAC_BYTES)
+  var result = sodium.crypto_secretbox_open_easy(
+    plaintextBuffer,
+    ciphertextBuffer,
+    Buffer.from(nonce, NONCE_ENCODING),
+    Buffer.from(key, KEY_ENCODING)
+  )
+  if (!result) return false
+  return plaintextBuffer.toString(KEY_ENCODING)
 }
 
 // Public-Key Cryptography

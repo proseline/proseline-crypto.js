@@ -5,8 +5,8 @@ tape('encryption round trip', function (test) {
   var plaintext = 'plaintext message'
   var key = crypto.projectReadKey()
   var nonce = crypto.randomNonce()
-  var encrypted = crypto.encrypt(plaintext, nonce, key)
-  var decrypted = crypto.decrypt(encrypted, nonce, key)
+  var encrypted = crypto.encryptUTF8(plaintext, nonce, key)
+  var decrypted = crypto.decryptUTF8(encrypted, nonce, key)
   test.same(plaintext, decrypted, 'identical')
   test.end()
 })
@@ -16,7 +16,26 @@ tape('bad decryption', function (test) {
     .toString(crypto.ciphertextEncoding)
   var key = crypto.projectReadKey()
   var nonce = crypto.randomNonce()
-  var decrypted = crypto.decrypt(random, nonce, key)
+  var decrypted = crypto.decryptUTF8(random, nonce, key)
+  test.assert(decrypted === false)
+  test.end()
+})
+
+tape('hex encryption round trip', function (test) {
+  var hex = crypto.random(32)
+  var key = crypto.projectReadKey()
+  var nonce = crypto.randomNonce()
+  var encrypted = crypto.encryptHex(hex, nonce, key)
+  var decrypted = crypto.decryptHex(encrypted, nonce, key)
+  test.same(hex, decrypted, 'identical')
+  test.end()
+})
+
+tape('hex bad decryption', function (test) {
+  var random = crypto.random(32)
+  var key = crypto.projectReadKey()
+  var nonce = crypto.randomNonce()
+  var decrypted = crypto.decryptHex(random, nonce, key)
   test.assert(decrypted === false)
   test.end()
 })
