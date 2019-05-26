@@ -185,7 +185,6 @@ exports.sign = function (object, secretKey, signatureKey, bodyKey) {
   assert(typeof signatureKey === 'string')
   assert(signatureKey.length > 0)
   assert(typeof bodyKey === 'string')
-  assert(bodyKey.length > 0)
   assert(object.hasOwnProperty(bodyKey))
   var body = object[bodyKey]
   var signatureBuffer = Buffer.alloc(SIGNATURE_BYTES)
@@ -204,12 +203,10 @@ exports.verify = function (object, publicKey, signatureKey, bodyKey) {
   assert(typeof publicKey === 'string')
   assert(publicKey.length === SIGN_PUBLIC_KEY_BYTES * 2)
   assert(typeof signatureKey === 'string')
-  assert(signatureKey.length > 0)
   assert(object.hasOwnProperty(signatureKey))
   assert(typeof object[signatureKey] === 'string')
   assert(object[signatureKey].length > 0)
   assert(typeof bodyKey === 'string')
-  assert(bodyKey.length > 0)
   assert(object.hasOwnProperty(bodyKey))
   var signature = object[signatureKey]
   var body = object[bodyKey]
