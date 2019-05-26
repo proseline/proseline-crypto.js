@@ -1,6 +1,6 @@
 {
   "name": "@proseline/crypto",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "cryptographic helper functions",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
   "repository": "proseline/proseline-crypto.js",
