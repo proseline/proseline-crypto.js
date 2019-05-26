@@ -40,7 +40,7 @@ tape('binary bad decryption', function (test) {
 })
 
 tape('signature', function (test) {
-  var keyPair = crypto.signingKeyPair()
+  var keyPair = crypto.keyPair()
   var object = { entry: 'plaintext message' }
   var signature = crypto.signJSON(object, keyPair.secretKey)
   test.assert(
@@ -50,7 +50,7 @@ tape('signature', function (test) {
 })
 
 tape('signature with body key', function (test) {
-  var keyPair = crypto.signingKeyPair()
+  var keyPair = crypto.keyPair()
   var object = { text: 'plaintext message' }
   var signature = crypto.signJSON(object, keyPair.secretKey)
   test.assert(
@@ -61,8 +61,8 @@ tape('signature with body key', function (test) {
 
 tape('signature with keys from seed', function (test) {
   var plaintext = 'plaintext message'
-  var seed = crypto.signingKeyPairSeed()
-  var keyPair = crypto.signingKeyPairFromSeed(seed)
+  var seed = crypto.keyPairSeed()
+  var keyPair = crypto.keyPairFromSeed(seed)
   var object = { entry: plaintext }
   var signature = crypto.signJSON(object, keyPair.secretKey)
   test.assert(

@@ -121,21 +121,21 @@ function decrypt (ciphertext, encoding, nonce, key) {
 
 var SIGN_SEED_BYTES = sodium.crypto_sign_SEEDBYTES
 
-exports.signingKeyPairSeedBytes = SIGN_SEED_BYTES
+exports.keyPairSeedBytes = SIGN_SEED_BYTES
 
-exports.signingKeyPairSeed = function () {
+exports.keyPairSeed = function () {
   return random(SIGN_SEED_BYTES)
 }
 
 var SIGN_PUBLIC_KEY_BYTES = sodium.crypto_sign_PUBLICKEYBYTES
 
-exports.signingPublicKeyBytes = SIGN_PUBLIC_KEY_BYTES
+exports.publicKeyBytes = SIGN_PUBLIC_KEY_BYTES
 
 var SIGN_SECRET_KEY_BYTES = sodium.crypto_sign_SECRETKEYBYTES
 
-exports.signingSecretKeyBytes = SIGN_SECRET_KEY_BYTES
+exports.secretKeyBytes = SIGN_SECRET_KEY_BYTES
 
-exports.signingKeyPairFromSeed = function (seed) {
+exports.keyPairFromSeed = function (seed) {
   assert(typeof seed === 'string')
   var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
@@ -150,7 +150,7 @@ exports.signingKeyPairFromSeed = function (seed) {
   }
 }
 
-exports.signingKeyPair = function () {
+exports.keyPair = function () {
   var publicKeyBuffer = Buffer.alloc(SIGN_PUBLIC_KEY_BYTES)
   var secretKeyBuffer = Buffer.alloc(SIGN_SECRET_KEY_BYTES)
   sodium.crypto_sign_keypair(publicKeyBuffer, secretKeyBuffer)
