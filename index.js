@@ -212,3 +212,63 @@ function decode (message, encoding) {
   }
   throw new Error('unsupported encoding: ' + encoding)
 }
+
+// Validation
+
+exports.validateEnvelope = function (options) {
+  var envelope = options.envelope
+  assert(typeof envelope === 'object')
+  var projectPublicKey = options.projectPublicKey
+  assert(typeof projectPublicKey === 'string')
+  var logPublicKey = options.logPublicKey
+  assert(typeof logPublicKey === 'string')
+  var encryptionKey = options.encryptionKey
+  assert(typeof encryptionKey === 'string')
+
+  var errors = []
+
+  function report (message, flag) {
+    var error = new Error(message)
+    error[flag] = true
+    errors.push(error)
+  }
+
+  // Validate Signatures
+  var ciphertext = envelope.entry.ciphertext
+  var validLogSiganture = exports.verifyBinary(
+    ciphertext, envelope.logSignature, logPublicKey
+  )
+  if (!validLogSiganture) {
+    report('invalid log signature', 'logSignature')
+  }
+  var validProjectSignature = exports.verifyBinary(
+    ciphertext, envelope.projectSignature, projectPublicKey
+  )
+  if (!validProjectSignature) {
+    report('invalid project signature', 'projectSignature')
+  }
+
+  // Validate Entry
+  if (encryptionKey) {
+    var entry = exports.decryptJSON(
+      envelope.entry.ciphertext,
+      envelope.entry.nonce,
+      encryptionKey
+    )
+    if (!entry) {
+      report('could not decrypt entry', 'encryption')
+    } else {
+      if (entry.discoveryKey !== envelope.discoveryKey) {
+        report('discoveryKey mismatch', 'discoveryKey')
+      }
+      if (entry.index !== envelope.index) {
+        report('index mismatch', 'index')
+      }
+      if (entry.index > 0 && !entry.hasOwnProperty('prior')) {
+        report('missing prior digest', 'prior')
+      }
+    }
+  }
+
+  return errors
+}

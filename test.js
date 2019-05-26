@@ -97,3 +97,43 @@ tape('discovery key', function (test) {
   test.assert(typeof projectDiscoverKey === 'string')
   test.end()
 })
+
+tape('validate envelope', function (test) {
+  var replicationKey = crypto.replicationKey()
+  var discoveryKey = crypto.discoveryKey(replicationKey)
+  var index = 1
+  var prior = crypto.hash(crypto.random(64))
+  var entry = {
+    discoveryKey,
+    index,
+    prior,
+    type: 'intro',
+    name: 'Kyle E. Mitchell',
+    device: 'laptop',
+    timestamp: new Date().toISOString()
+  }
+  var logKeyPair = crypto.keyPair()
+  var logPublicKey = logKeyPair.publicKey
+  var projectKeyPair = crypto.keyPair()
+  var projectPublicKey = projectKeyPair.publicKey
+  var encryptionKey = crypto.encryptionKey()
+  var nonce = crypto.nonce()
+  var ciphertext = crypto.encryptJSON(entry, nonce, encryptionKey)
+  var envelope = {
+    discoveryKey,
+    logPublicKey,
+    index,
+    logSignature: crypto.signBinary(
+      ciphertext, logKeyPair.secretKey
+    ),
+    projectSignature: crypto.signBinary(
+      ciphertext, projectKeyPair.secretKey
+    ),
+    entry: { ciphertext, nonce }
+  }
+  var errors = crypto.validateEnvelope({
+    envelope, projectPublicKey, logPublicKey, encryptionKey
+  })
+  test.same(errors, [], 'no errors')
+  test.end()
+})
