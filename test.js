@@ -30,6 +30,18 @@ tape('signature', function (test) {
   test.end()
 })
 
+tape('signature with body key', function (test) {
+  var plaintext = 'plaintext message'
+  var keyPair = crypto.signingKeyPair()
+  var bodyKey = 'xxx'
+  var signatureKey = 'signature'
+  var object = {}
+  object[bodyKey] = plaintext
+  crypto.sign(object, keyPair.secretKey, signatureKey, bodyKey)
+  test.assert(crypto.verify(object, keyPair.publicKey, signatureKey, bodyKey))
+  test.end()
+})
+
 tape('signature with keys from seed', function (test) {
   var plaintext = 'plaintext message'
   var seed = crypto.signingKeyPairSeed()
