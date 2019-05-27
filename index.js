@@ -29,6 +29,16 @@ function hash (input) {
 
 exports.hash = hash
 
+function hashJSON (input) {
+  assert(input !== undefined)
+  var digestBuffer = Buffer.alloc(DIGEST_BYTES)
+  var inputBuffer = Buffer.from(stringify(input), 'utf8')
+  sodium.crypto_generichash(digestBuffer, inputBuffer)
+  return digestBuffer.toString(BINARY_ENCODING)
+}
+
+exports.hashJSON = hashJSON
+
 // Stream Encryption
 
 var STREAM_KEY_BYTES =

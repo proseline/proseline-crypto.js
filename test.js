@@ -78,6 +78,13 @@ tape('hash', function (test) {
   test.end()
 })
 
+tape('hashJSON', function (test) {
+  var input = { text: 'this is some input' }
+  var digest = crypto.hashJSON(input)
+  test.assert(typeof digest === 'string')
+  test.end()
+})
+
 tape('random', function (test) {
   var random = crypto.random(32)
   test.assert(typeof random === 'string')
