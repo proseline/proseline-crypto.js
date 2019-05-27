@@ -316,3 +316,60 @@ exports.validateEnvelope = function (options) {
 
   return errors
 }
+
+// Invitations
+
+var invitationEncrypted = ['encryptionKey', 'secretKey', 'title']
+
+exports.encryptInvitation = function (options) {
+  var replicationKey = options.replicationKey
+  assert(typeof replicationKey === 'string')
+  var publicKey = options.publicKey
+  assert(typeof publicKey === 'string')
+  var encryptionKey = options.encryptionKey
+  assert(typeof encryptionKey === 'string')
+
+  var returned = { replicationKey, publicKey }
+  invitationEncrypted.forEach(encryptProperty)
+  return returned
+
+  function encryptProperty (key) {
+    if (!options.hasOwnProperty(key)) return
+    var encryptMethod = key === 'title'
+      ? exports.encryptString
+      : exports.encryptBinary
+    var nonce = exports.nonce()
+    returned[key] = {
+      ciphertext: encryptMethod(
+        options[key], nonce, encryptionKey
+      ),
+      nonce
+    }
+  }
+}
+
+exports.decryptInvitation = function (options) {
+  var invitation = options.invitation
+  assert(typeof invitation === 'object')
+  var encryptionKey = options.encryptionKey
+  assert(typeof encryptionKey === 'string')
+
+  var returned = {
+    replicationKey: invitation.replicationKey,
+    publicKey: invitation.publicKey
+  }
+  invitationEncrypted.forEach(decryptProperty)
+  return returned
+
+  function decryptProperty (key) {
+    if (!invitation.hasOwnProperty(key)) return
+    var decryptMethod = key === 'title'
+      ? exports.decryptString
+      : exports.decryptBinary
+    returned[key] = decryptMethod(
+      invitation[key].ciphertext,
+      invitation[key].nonce,
+      encryptionKey
+    )
+  }
+}

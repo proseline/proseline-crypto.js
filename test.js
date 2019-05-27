@@ -172,3 +172,29 @@ tape('envelope generate and validate', function (test) {
   test.same(errors, [], '.validateEnvelope() returns no errors')
   test.end()
 })
+
+tape('invitation round trip', function (test) {
+  var replicationKey = crypto.replicationKey()
+  var keyPair = crypto.keyPair()
+  var publicKey = keyPair.publicKey
+  var secretKey = keyPair.secretKey
+  var encryptionKey = crypto.encryptionKey()
+  var title = 'Test Title'
+  var invitation
+  test.doesNotThrow(function () {
+    invitation = crypto.encryptInvitation({
+      replicationKey,
+      publicKey,
+      encryptionKey,
+      secretKey,
+      title
+    })
+  }, '.invitation() does not throw')
+  var opened = crypto.decryptInvitation({
+    invitation, encryptionKey
+  })
+  test.same(opened.secretKey, secretKey, 'secretKey')
+  test.same(opened.encryptionKey, encryptionKey, 'encryptionKey')
+  test.same(opened.title, title, 'title')
+  test.end()
+})
