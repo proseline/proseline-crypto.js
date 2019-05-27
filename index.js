@@ -381,3 +381,9 @@ exports.decryptInvitation = function (options) {
     )
   }
 }
+
+// Encoding
+
+exports.base64ToHex = function (base64) {
+  return Buffer.from(base64, 'base64').toString('hex')
+}
