@@ -206,9 +206,11 @@ tape('invitation round trip', function (test) {
   test.end()
 })
 
-tape('encoding', function (test) {
-  var random = crypto.random(32)
-  var hex = crypto.base64ToHex(random)
+tape('encoding round trip', function (test) {
+  var original = crypto.random(32)
+  var hex = crypto.base64ToHex(original)
   test.assert(/^[a-f0-9]+$/.test(hex))
+  var base64 = crypto.hexToBase64(hex)
+  test.same(original, base64)
   test.end()
 })
