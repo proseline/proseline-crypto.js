@@ -123,6 +123,7 @@ tape('validate envelope', function (test) {
     discoveryKey,
     logPublicKey,
     index,
+    prior,
     logSignature: crypto.signBinary(
       ciphertext, logKeyPair.secretKey
     ),
@@ -135,5 +136,39 @@ tape('validate envelope', function (test) {
     envelope, projectPublicKey, logPublicKey, encryptionKey
   })
   test.same(errors, [], 'no errors')
+  test.end()
+})
+
+tape('envelope generate and validate', function (test) {
+  var replicationKey = crypto.replicationKey()
+  var discoveryKey = crypto.discoveryKey(replicationKey)
+  var logKeyPair = crypto.keyPair()
+  var logPublicKey = logKeyPair.publicKey
+  var projectKeyPair = crypto.keyPair()
+  var projectPublicKey = projectKeyPair.publicKey
+  var encryptionKey = crypto.encryptionKey()
+  var index = 1
+  var prior = crypto.hash(crypto.random(64))
+  var envelope
+  test.doesNotThrow(function () {
+    envelope = crypto.envelope({
+      discoveryKey,
+      logKeyPair,
+      projectKeyPair,
+      encryptionKey,
+      index,
+      prior,
+      entry: {
+        type: 'intro',
+        name: 'Kyle E. Mitchell',
+        device: 'laptop',
+        timestamp: new Date().toISOString()
+      }
+    })
+  }, '.envelope() does not throw')
+  var errors = crypto.validateEnvelope({
+    envelope, projectPublicKey, logPublicKey, encryptionKey
+  })
+  test.same(errors, [], '.validateEnvelope() returns no errors')
   test.end()
 })

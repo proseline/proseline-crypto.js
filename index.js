@@ -213,7 +213,48 @@ function decode (message, encoding) {
   throw new Error('unsupported encoding: ' + encoding)
 }
 
-// Validation
+// Envelopes
+
+exports.envelope = function (options) {
+  assert(typeof options === 'object')
+  var discoveryKey = options.discoveryKey
+  assert(typeof discoveryKey === 'string')
+  var entry = options.entry
+  assert(typeof entry === 'object')
+  var logKeyPair = options.logKeyPair
+  assert(typeof logKeyPair === 'object')
+  assert(typeof logKeyPair.publicKey === 'string')
+  assert(typeof logKeyPair.secretKey === 'string')
+  var projectKeyPair = options.projectKeyPair
+  assert(typeof projectKeyPair === 'object')
+  assert(typeof projectKeyPair.publicKey === 'string')
+  assert(typeof projectKeyPair.secretKey === 'string')
+  var encryptionKey = options.encryptionKey
+  var index = options.index
+  assert(Number.isSafeInteger(index))
+  assert(index >= 0)
+  var prior = options.prior
+  if (index > 0) assert(typeof prior === 'string')
+
+  entry.index = index
+  if (index > 0) entry.prior = prior
+  var nonce = exports.nonce()
+  var ciphertext = exports.encryptJSON(entry, nonce, encryptionKey)
+  var envelope = {
+    discoveryKey: entry.discoveryKey,
+    index: entry.index,
+    prior: entry.prior,
+    logPublicKey: logKeyPair.publicKey,
+    logSignature: exports.signBinary(
+      ciphertext, logKeyPair.secretKey
+    ),
+    projectSignature: exports.signBinary(
+      ciphertext, projectKeyPair.secretKey
+    ),
+    entry: { ciphertext, nonce }
+  }
+  return envelope
+}
 
 exports.validateEnvelope = function (options) {
   var envelope = options.envelope
@@ -264,8 +305,11 @@ exports.validateEnvelope = function (options) {
       if (entry.index !== envelope.index) {
         report('index mismatch', 'index')
       }
+      if (entry.index > 0 && !envelope.hasOwnProperty('prior')) {
+        report('envelope missing prior digest', 'envelopePrior')
+      }
       if (entry.index > 0 && !entry.hasOwnProperty('prior')) {
-        report('missing prior digest', 'prior')
+        report('entry missing prior digest', 'entryPrior')
       }
     }
   }
