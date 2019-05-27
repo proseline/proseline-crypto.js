@@ -140,7 +140,7 @@ tape('validate envelope', function (test) {
     entry: { ciphertext, nonce }
   }
   var errors = crypto.validateEnvelope({
-    envelope, projectPublicKey, logPublicKey, encryptionKey
+    envelope, projectPublicKey, encryptionKey
   })
   test.same(errors, [], 'no errors')
   test.end()

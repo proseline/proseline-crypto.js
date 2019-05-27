@@ -271,8 +271,6 @@ exports.validateEnvelope = function (options) {
   assert(typeof envelope === 'object')
   var projectPublicKey = options.projectPublicKey
   assert(typeof projectPublicKey === 'string')
-  var logPublicKey = options.logPublicKey
-  assert(typeof logPublicKey === 'string')
   var encryptionKey = options.encryptionKey
   assert(typeof encryptionKey === 'string')
 
@@ -287,7 +285,7 @@ exports.validateEnvelope = function (options) {
   // Validate Signatures
   var ciphertext = envelope.entry.ciphertext
   var validLogSiganture = exports.verifyBinary(
-    ciphertext, envelope.logSignature, logPublicKey
+    ciphertext, envelope.logSignature, envelope.logPublicKey
   )
   if (!validLogSiganture) {
     report('invalid log signature', 'logSignature')
